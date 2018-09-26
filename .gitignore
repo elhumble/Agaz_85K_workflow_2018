@@ -1,0 +1,9 @@
+.Rproj.user
+.Rhistory
+.RData
+/doc
+/data
+/test_out
+*.log
+*.errors
+log
