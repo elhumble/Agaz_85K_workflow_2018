@@ -7,3 +7,7 @@
 *.log
 *.errors
 log
+9_LD.R
+9_ROH_length_dist.R
+/figs
+.gitignore
