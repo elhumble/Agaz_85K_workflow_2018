@@ -2,7 +2,7 @@ library(data.table)
 library(dplyr)
 library(tidyr)
 library(ggplot2)
-source("theme_emily.R")
+source("scripts/theme_emily.R")
 library(wesanderson)
 
 # Concentration vs call rate for all samples
@@ -16,6 +16,8 @@ library(wesanderson)
 call_rate <- fread("data/out/AxiomGT1.report.txt", header = T, skip = 363) %>%
   separate(cel_files, c("Well", "Sample"), sep = "-") %>%
   separate(Sample, c("Sample", "Chip"), sep = "_\\(A")
+
+summary(call_rate$call_rate)
 
 # Add code for species
 call_rate <- call_rate %>%

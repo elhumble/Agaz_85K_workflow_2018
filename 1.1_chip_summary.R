@@ -9,7 +9,7 @@ library(kableExtra)
 library(ggplot2)
 library(RColorBrewer)
 library(readxl)
-source("theme_emily.R")
+source("scripts/theme_emily.R")
 
 #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~#
 #     Initial data wrangling     #
@@ -67,6 +67,20 @@ data <- left_join(data, annot,
                           grepl("^Ag", cust_id) | grepl("^4", cust_id) ~ "Transcriptome",
                           grepl("JIH", cust_id) ~ "JIH",
                           TRUE ~ "Canine"))
+
+#~~ Write list of otvs only for downstream comparison
+
+otv %>%
+  left_join(annot,                  
+            by = c("probeset_id" = "Probe.Set.ID")) %>%
+  mutate(type = case_when(grepl("Contig", cust_id) ~ "RAD",
+                          grepl("^Ag", cust_id) | grepl("^4", cust_id) ~ "Transcriptome",
+                          grepl("JIH", cust_id) ~ "JIH",
+                          TRUE ~ "Canine")) %>%
+  mutate(cust_id = gsub("_rs", "_", cust_id)) %>% # edit JIH SNP names
+  select(cust_id) %>%
+  write.table("data/out/agaz/plink/otv_snps.txt", quote = F,
+              row.names = F, col.names = F)
 
 # Add affy info and priority categories from design phase
 
@@ -132,6 +146,15 @@ typed %>%
   mutate(cust_id = gsub("_rs", "_", cust_id)) %>% # edit JIH SNP names
   select(cust_id) %>%
   write.table("data/out/agaz/plink/typed_snps.txt", quote = F,
+              row.names = F, col.names = F)
+
+# poly hi res
+
+poly %>%
+  filter(filename == "PolyHighResolution.ps") %>%
+  mutate(cust_id = gsub("_rs", "_", cust_id)) %>% # edit JIH SNP names
+  select(cust_id) %>%
+  write.table("data/out/agaz/plink/poly_hi_res_snps.txt", quote = F,
               row.names = F, col.names = F)
 
 # Average design score for printed SNPs?
@@ -212,17 +235,6 @@ poly %>%
 #~~ Proportion typed / tiled across SNP categories
 
 b$total / a$total
-
-
-#~~ RAD SNPs more likely to convert than transcriptome SNPs?
-
-# Fisher's Exact Test RAD vs Transcriptome
-
-# success over fail (total - good)
-
-# FET <- matrix(c(65883, 6453, 11464, 1284),
-#               nrow = 2)
-# fisher.test(FET)
 
 
 #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~#
