@@ -6,7 +6,7 @@
 
 **Summary**
 -------------
-This repository contains the scripts used for genotyping and downstream analyses of 274 Antarctic fur seal individuals. This includes analysis of inbreeding and relatedness. The scripts are commented within, and are named according to the order in which they were run.
+This repository contains the scripts used for genotyping and downstream analysis of 274 Antarctic fur seal individuals run on our custom SNP array. This includes analysis of inbreeding and relatedness. The scripts are commented within, and are named according to the order in which they were run.
 
 **Data**
 -------------
