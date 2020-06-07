@@ -113,6 +113,7 @@ typed <- data %>%
   filter(filename == "PolyHighResolution.ps" | filename == "NoMinorHom.ps" | filename == "MonoHighResolution.ps")
 
 
+
 #~~~~~~~~~~~~~~~~~#
 #     Numbers     #
 #~~~~~~~~~~~~~~~~~#
@@ -237,9 +238,9 @@ poly %>%
 b$total / a$total
 
 
-#~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~#
-#     Conversion rate of pre-validated success rate     #
-#~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~#
+#~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~#
+#     Exploring array performance by SNP validation (T/F)    #
+#~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~#
 
 # Conversion rate = proportion of SNPs yielding high quality genotypes
 
@@ -376,12 +377,16 @@ chi <- chisq.test(val_unval, correct = F)
 chi$expected # (>5?)
 
 
-
 #~~ Classification of pre-validated SNPs that did not convert
 
 val <- data %>%
-  filter(type == "Canine" | type == "JIH" | cust_id %in% val_rad$cust_id) %>%
-  filter(filename == "Other.ps" | filename == "CallRateBelowThreshold.ps" | filename == "OffTargetVariant.ps")
+  filter(type == "Canine" |
+           type == "JIH" | cust_id %in% val_rad$cust_id) %>%
+  filter(
+    filename == "Other.ps" |
+      filename == "CallRateBelowThreshold.ps" |
+      filename == "OffTargetVariant.ps"
+  )
 
 ggplot(val, aes(filename, fill = type)) +
   geom_bar()
@@ -394,8 +399,9 @@ transcriptome <- filter(typed, type == "Transcriptome") %>%
   separate(cust_id, c("Contig", "Position"), sep = "_") %>%
   mutate(Contig = gsub(".v1", "_v1", Contig))
 
-trans_annot <- fread("data/processed/Transcript_annotations.txt") %>% # This file is saved on HD: server data
-  gather(category, annotation, -Contig_Name) %>%
+trans_annot <-
+  fread("data/processed/Transcript_annotations.txt") %>% # This file is saved on HD: server data
+  gather(category, annotation,-Contig_Name) %>%
   filter(!is.na(annotation)) %>%
   left_join(transcriptome, by = c("Contig_Name" = "Contig")) %>%
   filter(!is.na(filename))
@@ -411,6 +417,118 @@ trans_annot %>%
 # 5/6 MHC SNPs typed. 3 polymorphic
 
 # Thank you to Meinolf Ottensmann for designing the six MHC SNPs
+
+
+
+#~~~~~~~~~~~~~~~#
+#     Model     #
+#~~~~~~~~~~~~~~~#
+
+model_df <- data %>%
+  mutate(validated = case_when(type == "Canine" | type == "JIH" | cust_id %in% val_rad$cust_id ~ TRUE,
+                         TRUE ~ F)) %>%
+  mutate(canine = case_when(type == "Canine" ~ TRUE,
+                             TRUE ~ F)) %>%
+  mutate(goldengate = case_when(type == "JIH" ~ TRUE,
+                             TRUE ~ F)) %>%
+  mutate(sanger = case_when(cust_id %in% val_rad$cust_id ~ TRUE,
+                             TRUE ~ F)) %>%
+  mutate(unique = case_when(SNP_PRIORITY == 1 |SNP_PRIORITY == 2 | SNP_PRIORITY == 5 ~ TRUE,
+                            TRUE ~ F)) %>%
+  mutate(converted = case_when(probeset_id %in% typed$probeset_id ~ TRUE,
+                           TRUE ~ F)) %>%
+  mutate(affy = case_when(SNP_PRIORITY == 1 | SNP_PRIORITY == 3 | SNP_PRIORITY == 4 |SNP_PRIORITY ==5 ~ TRUE,
+                            TRUE ~ F)) %>%
+  mutate(transcriptome = case_when(type == "Transcriptome" | type == "JIH" ~ T,
+                                   TRUE ~ F)) %>%
+  mutate(rad = case_when(type == "RAD" ~ T,
+                         TRUE ~ F)) %>%
+  mutate_at(vars(validated:rad), as.factor)
+  
+
+#~~ Binomial model
+
+mod_1 <-
+  glm(
+    converted ~ affy + canine + goldengate + sanger + unique + rad,
+    family = binomial,
+    data = model_df
+  )
+
+# get coefficients
+
+summary(mod_1)
+
+# get CIs
+
+broom::tidy(mod_1, conf.int = TRUE, conf.method = "boot")
+
+#~~ Probability change
+
+# model coefficients are log odds
+# exponentiated model coefficients = odds
+# inverse logit model coefficients = probability
+
+inv_log <- function(x) {
+  exp(x) / (1 + exp(x))
+}
+
+# considering all criteria
+
+mod_1$coefficients
+
+inv_log(
+  mod_1$coefficients[1] +
+    1 * mod_1$coefficients[2] +
+    1 * mod_1$coefficients[3] +
+    1 * mod_1$coefficients[4] +
+    1 * mod_1$coefficients[5] +
+    1 * mod_1$coefficients[6] +
+    1 * mod_1$coefficients[7]
+)
+
+# considering without pre-validated SNPs
+inv_log(
+  mod_1$coefficients[1] +
+    1 * mod_1$coefficients[2] +
+    0 * mod_1$coefficients[3] +
+    0 * mod_1$coefficients[4] +
+    0 * mod_1$coefficients[5] +
+    1 * mod_1$coefficients[6] +
+    1 * mod_1$coefficients[7]
+)
+
+
+#~~ CIs for prediction estimate based on combination of criteria
+
+
+# simulate response data based on model, 1000 times
+
+Ysim <- simulate(mod_1, nsim = 1000)
+
+# bootstrap prediction over simulated data function
+bootstrap <- function(y, dat) {
+  dat$typed <- y
+  mod_sim <- glm(
+    typed ~ affy + canine + goldengate + sanger + unique + rad,
+    family = binomial,
+    data = dat
+  )
+  out <- inv_log(
+    mod_sim$coefficients[1] +
+      1 * mod_1$coefficients[2] +
+      0 * mod_1$coefficients[3] +
+      0 * mod_1$coefficients[4] +
+      0 * mod_1$coefficients[5] +
+      1 * mod_1$coefficients[6] +
+      1 * mod_1$coefficients[7]
+  )
+}
+
+# run bootstrapping
+all_sims <- map_dbl(Ysim, bootstrap, model_df)
+
+quantile(all_sims, probs = c(0.025, 0.975))
 
 
 #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~#
