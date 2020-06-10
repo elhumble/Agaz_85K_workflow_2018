@@ -85,45 +85,7 @@ write.table(fix_map(map_agaz, annot), "data/out/agaz/plink/agaz_plate1_3.map",
 #        Update pedigree info        #
 #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~#
 
-#~~ PED info
-
-# seals <- read.csv("data/SSBseals_wrangled_Dec_2017.csv") %>%
-#   select(PUP, MOTHER, MOTHER_ID1) %>%
-#   mutate(PUP = as.character(PUP),
-#          MOTHER = as.character(MOTHER),
-#          MOTHER_ID1 = as.character(MOTHER_ID1))
-# 
-# AT <- data.frame(PUP = "ATP16015",
-#                  MOTHER = "ATF16015",
-#                  MOTHER_ID1 = NA)
-# 
-# seals <- rbind(seals, AT) %>%
-#   mutate(MOTHER = case_when(MOTHER_ID1 == "AGF99049" ~ "AGF99049",
-#                             TRUE ~ MOTHER)) %>%
-#   select(-MOTHER_ID1)
-# 
-# 
-# ped_file <- read.table("data/out/agaz/plink/agaz_plate1_3.ped", skip  = 1)
-# 
-# ped <- as.data.frame(ped_file[,1])
-# colnames(ped) <- "IID"
-# 
-# ped_update <- ped
-# 
-# ped <- ped %>%
-#   left_join(seals, by = c("IID" = "PUP")) %>%
-#   mutate(MOTHER = as.character(MOTHER)) %>%
-#   mutate(a = MOTHER %in% IID) %>%
-#   mutate(MOTHER = case_when(a == T ~ MOTHER,
-#                             TRUE ~ "NA")) %>%
-#   mutate(MOTHER = na_if(MOTHER, "NA")) %>%
-#   mutate(FATHER = NA) %>%
-#   select(-a)
-
-
-
-
-#~~ Plate data from Anneke
+#~~ Plate data (Anneke)
 
 seals <- read.csv("data/pup_dna_July2019.csv") %>%
   select(PUP, MOTHER)
@@ -252,3 +214,28 @@ data.frame(FID = c("AGF14014_A", "AGF14014_B"),
                   IID = c("AGF14014_A", "AGF14014_B")) %>%
   write.table("data/out/agaz/plink/dups_to_rm_plink.txt", 
               quote = F, row.names = F, col.names = F)
+
+
+#~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~#
+#                VCF for upload              #
+#~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~#
+
+
+data.frame(IID = new_famped$IID,
+           FID = new_famped$IID,
+           new_IID = seq(from = 1, to = nrow(new_famped)),
+           new_FID = seq(from = 1, to = nrow(new_famped))) %>%
+  write.table("data/out/agaz/plink/recoded_ids_for_vcf.txt",
+              quote = F, row.names = F, col.names = F)
+
+
+#~~ write vcf file for all genotyped SNPs
+
+system(paste0("~/software/plink --file data/out/agaz/plink/agaz_plate1_3 ",
+              "--update-ids data/out/agaz/plink/recoded_ids_for_vcf.txt ",
+              "--extract data/out/agaz/plink/typed_snps.txt ",
+              "--out data/processed/Agaz_85K_genotypes ",
+              "--no-fid --no-pheno --no-sex --no-parents " ,
+              "--recode vcf-iid --allow-extra-chr --debug"))
+
+
