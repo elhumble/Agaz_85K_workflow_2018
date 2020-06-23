@@ -56,8 +56,8 @@ gen <- gen %>%
   mutate(kinship = (Z1 / 4) + (Z2 / 2)) %>%
   mutate(criteria = case_when(kinship >= 1/2^(5/2) & kinship < 1/2^(3/2) & Z0 < 0.1 ~ "Parent-offspring",
                               kinship >= 1/2^(5/2) & kinship < 1/2^(3/2) & Z0 > 0.1 & Z0 < 0.365 ~ "Full-sibling",
-                              kinship >= 1/2^(7/2) & kinship < 1/2^(5/2) & Z0 > 0.365 & Z0 < 1-(1/(2^(3/2))) ~ "Second",
-                              kinship >= 1/2^(9/2) & kinship < 1/2^(7/2) & Z0 > 1-(1/2^(3/2)) & Z0 < 1 -(1/2^(5/2)) ~ "Third",
+                              kinship >= 1/2^(7/2) & kinship < 1/2^(5/2) & Z0 > 0.365 & Z0 < 1-(1/(2^(3/2))) ~ "Second-degree",
+                              kinship >= 1/2^(9/2) & kinship < 1/2^(7/2) & Z0 > 1-(1/2^(3/2)) & Z0 < 1 -(1/2^(5/2)) ~ "Third-degree",
                               kinship < 1/2^(9/2) & Z0 > 1-(1/2^(5/2)) ~ "Unrelated",
                               TRUE ~ "Unknown"))
 
@@ -112,8 +112,8 @@ a <- ggplot(gen, aes(R1, R0)) +
   geom_point(size = 2, alpha = 0.5,
              aes(colour = factor(criteria, 
                                  levels = c("Parent-offspring",
-                                            "Second",
-                                            "Third",
+                                            "Second-degree",
+                                            "Third-degree",
                                             "Unrelated",
                                             "Unknown")))) +
   scale_colour_manual(values = pal) +
@@ -124,8 +124,8 @@ b <- ggplot(gen, aes(R1, KING)) +
   geom_point(size = 2, alpha = 0.5,
              aes(colour = factor(criteria, 
                                  levels = c("Parent-offspring",
-                                            "Second",
-                                            "Third",
+                                            "Second-degree",
+                                            "Third-degree",
                                             "Unrelated",
                                             "Unknown")))) +
   scale_colour_manual(values = pal) +
@@ -153,7 +153,10 @@ c <- ggplot(gen, aes(x=PI_HAT)) +
 
 # Figure 5
 
+c + b
+
 ggsave("figs/Figure_5.tiff", c + b, width = 21, height = 10, units = "cm")  
+ggsave("figs/Figure_5.png", c + b, width = 21, height = 10, units = "cm")  
 
 # Figure S3
 
@@ -162,8 +165,8 @@ d <- ggplot(gen, aes(R1, KING)) +
   geom_point(size = 2, alpha = 0.5,
              aes(colour = factor(criteria, 
                                  levels = c("Parent-offspring",
-                                            "Second",
-                                            "Third",
+                                            "Second-degree",
+                                            "Third-degree",
                                             "Unrelated",
                                             "Unknown")))) +
   scale_colour_manual(values = pal) +
@@ -175,8 +178,8 @@ e <- ggplot(gen, aes(R1, R0)) +
   geom_point(size = 2, alpha = 0.5,
              aes(colour = factor(criteria, 
                                  levels = c("Parent-offspring",
-                                            "Second",
-                                            "Third",
+                                            "Second-degree",
+                                            "Third-degree",
                                             "Unrelated",
                                             "Unknown")))) +
   scale_colour_manual(values = pal) +
@@ -188,8 +191,10 @@ e <- ggplot(gen, aes(R1, R0)) +
   ggtitle("B")
 
 
+d + e
 
 ggsave("figs/Figure_S3.tiff", d + e, width = 21, height = 10, units = "cm")  
+ggsave("figs/Figure_S3.png", d + e, width = 21, height = 10, units = "cm")  
 
 # Remove pairs of individuals close to boundaries
 
@@ -197,8 +202,8 @@ gen <- gen %>%
   mutate(kinship = (Z1 / 4) + (Z2 / 2)) %>%
   mutate(criteria_2 = case_when(kinship >= 1/2^(5/2) & kinship < 1/2^(3/2) & Z0 < 0.1 ~ "Parent-offspring",
                               kinship >= 1/2^(5/2) & kinship < 1/2^(3/2) & Z0 > 0.1 & Z0 < 0.365 ~ "Full-sibling",
-                              kinship >= 1/2^(7/2) + 0.01 & kinship < 1/2^(5/2) + 0.01 & Z0 > 0.365 + 0.01 & Z0 < 1-(1/(2^(3/2))) + 0.01 ~ "Second",
-                              kinship >= 1/2^(9/2) + 0.01 & kinship < 1/2^(7/2) + 0.01 & Z0 > 1-(1/2^(3/2)) + 0.01 & Z0 < 1 -(1/2^(5/2)) + 0.01 ~ "Third",
+                              kinship >= 1/2^(7/2) + 0.01 & kinship < 1/2^(5/2) + 0.01 & Z0 > 0.365 + 0.01 & Z0 < 1-(1/(2^(3/2))) + 0.01 ~ "Second-degree",
+                              kinship >= 1/2^(9/2) + 0.01 & kinship < 1/2^(7/2) + 0.01 & Z0 > 1-(1/2^(3/2)) + 0.01 & Z0 < 1 -(1/2^(5/2)) + 0.01 ~ "Third-degree",
                               kinship < 1/2^(9/2) + 0.01 & Z0 > 1-(1/2^(5/2)) + 0.01 ~ "Unrelated",
                               TRUE ~ "Unknown"))
 
@@ -206,8 +211,8 @@ f <- ggplot(filter(gen, criteria_2 != "Unknown"), aes(R1, KING)) +
   geom_point(size = 2, alpha = 0.5,
              aes(colour = factor(criteria_2, 
                                  levels = c("Parent-offspring",
-                                            "Second",
-                                            "Third",
+                                            "Second-degree",
+                                            "Third-degree",
                                             "Unrelated",
                                             "Unknown")))) +
   scale_colour_manual(values = pal) +
@@ -219,8 +224,8 @@ g <- ggplot(filter(gen, criteria_2 != "Unknown"), aes(R1, R0)) +
   geom_point(size = 2, alpha = 0.5,
              aes(colour = factor(criteria_2, 
                                  levels = c("Parent-offspring",
-                                            "Second",
-                                            "Third",
+                                            "Second-degree",
+                                            "Third-degree",
                                             "Unrelated",
                                             "Unknown")))) +
   scale_colour_manual(values = pal) +
@@ -231,7 +236,11 @@ g <- ggplot(filter(gen, criteria_2 != "Unknown"), aes(R1, R0)) +
                                default.unit = "inch")) +
   ggtitle("B")
 
+
+f + g
+
 ggsave("figs/Figure_S4.tiff", f + g, width = 21, height = 10, units = "cm")  
+ggsave("figs/Figure_S4.png", f + g, width = 21, height = 10, units = "cm")  
 
 #~~~~~~~~~~~~~~~~~~~~~~~#
 #        Numbers        #
