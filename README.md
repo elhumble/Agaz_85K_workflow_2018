@@ -1,8 +1,8 @@
-**A 90K SNP array uncovers inbreeding and cryptic relatedness in an Antarctic fur seal breeding colony**
+**An 85K SNP array uncovers inbreeding and cryptic relatedness in an Antarctic fur seal breeding colony**
 
 [Emily Humble](http:/elhumble.github.io/), Anneke Paijmans, Jaume Forcada and Joe Hoffman
 
-###### Manuscript available [here](https://www.biorxiv.org/content/10.1101/2020.04.01.020123v1)
+###### Manuscript available [here](https://www.g3journal.org/content/early/2020/06/15/g3.120.401268)
 
 **Summary**
 -------------
@@ -10,7 +10,7 @@ This repository contains the scripts used for genotyping and downstream analysis
 
 **Data**
 -------------
-Genotyped SNPs are avaible to download at the European Variation Archive.
+Genotyped SNPs are avaible to download from [figshare](https://doi.org/10.25387/g3.12458255).
 
 `/scripts` contains the code for my `ggplot2` theme.
 
